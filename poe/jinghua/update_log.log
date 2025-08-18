@@ -10713,3 +10713,29 @@ laqujinghuashuju.py 执行成功
 gengxinfen.py 执行成功
 === [2025-08-18 16:00:01] 结束 ===
 
+=== [2025-08-18 17:00:01] 开始更新 ===
+执行 gengxin.py...
+更新完成 ✅ 数据已保存至： /www/wwwroot/poe/jinghua/price_data_赛季.json
+gengxin.py 执行成功
+执行 laqujinghuashuju.py...
+价格写入
+laqujinghuashuju.py 执行成功
+执行gengxinfen.py...
+读取已存在的 disenchant_items_updated.json 进行更新...
+更新完成，已保存为 disenchant_items_updated.json
+gengxinfen.py 执行成功
+=== [2025-08-18 17:00:01] 结束 ===
+
+=== [2025-08-18 18:00:01] 开始更新 ===
+执行 gengxin.py...
+更新完成 ✅ 数据已保存至： /www/wwwroot/poe/jinghua/price_data_赛季.json
+gengxin.py 执行成功
+执行 laqujinghuashuju.py...
+价格写入
+laqujinghuashuju.py 执行成功
+执行gengxinfen.py...
+读取已存在的 disenchant_items_updated.json 进行更新...
+更新完成，已保存为 disenchant_items_updated.json
+gengxinfen.py 执行成功
+=== [2025-08-18 18:00:01] 结束 ===
+
