@@ -1,4 +1,5 @@
 <template>
+  <div class="huashi-container">
     <el-row :gutter="20">
       <el-col :span="8">
         <el-button type="text" class="custom-button" @click="filterlowItems">低价化石</el-button>
@@ -13,7 +14,7 @@
   
     <el-row :gutter="80" class="custom-row">
       <el-col :span="8">
-        <el-table v-if="filteredItems.length > 0" :data="filteredItems" border>
+        <el-table v-if="filteredItems.length > 0" :data="filteredItems" border v-loading="loading" element-loading-text="加载中...">
           <el-table-column prop="name" label="名称" min-width/>
           <el-table-column prop="calculated" label="价格" sortable min-width="60"/>
           <el-table-column label="购买链接" min-width="40">
@@ -29,7 +30,22 @@
             </template>
           </el-table-column>
         </el-table>
-        <div v-else>没有找到符合条件的项。</div>
+        <div v-else-if="!loading && !error" class="no-data">
+          <el-empty description="没有找到符合条件的项" />
+        </div>
+        <div v-else-if="error" class="error-message">
+          <el-alert
+            :title="error"
+            type="error"
+            show-icon
+            :closable="false"
+          >
+            <template #default>
+              <p>{{ error }}</p>
+              <el-button type="primary" @click="retryFetch">重试</el-button>
+            </template>
+          </el-alert>
+        </div>
           <el-row :gutter="20">
           <el-button plain @click="dialogTableVisible = true">
             理论计算方法
@@ -91,7 +107,8 @@
         </el-card>
       </el-col>
     </el-row>
-  </template>
+  </div>
+</template>
   <script>
   export default {
     data() {
@@ -124,6 +141,8 @@
         shensheng:0,
         newQuantity: 0, // 用于存储用户输入的新数量值
         dialogTableVisible: false, // 控制弹窗显示状态
+        loading: false,
+        error: null,
       };
     },
     methods: {
@@ -169,9 +188,11 @@
         },
         async fetchData() 
         {
+            this.loading = true;
+            this.error = null;
             try {
                 const response = await fetch('/huashi.json'); // 替换为你的 JSON 路径
-                if (!response.ok) throw new Error('网络响应不正常');
+                if (!response.ok) throw new Error(`网络响应不正常: ${response.status}`);
                 const data = await response.json();
                 this.items = data; // 存储 JSON 数据
                 const maxCalculated = parseFloat(this.input); // 获取输入的数字
@@ -205,7 +226,13 @@
                 }
             } catch (error) {
                 console.error('获取数据时出错:', error);
+                this.error = error.message || '获取数据失败，请检查网络连接';
+            } finally {
+                this.loading = false;
             }
+        },
+        retryFetch() {
+            this.fetchData();
         },
         filterlowItems() 
         {

@@ -1,5 +1,6 @@
 <template>
-  <main class="min-h-screen bg-gray-50 p-6">
+  <div class="fenchen-container">
+    <main class="min-h-screen bg-gray-50 p-6">
     <section class="max-w-7xl mx-auto">
       <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">分解物品表格展示</h1>
 
@@ -59,6 +60,7 @@
       </div>
     </section>
   </main>
+  </div>
 </template>
 
 <script setup>
@@ -123,21 +125,70 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+.fenchen-container {
+  padding: var(--spacing-md);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
+  font-size: var(--font-size-sm);
 }
+
 th, td {
   text-align: left;
   padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
 }
+
 th {
-  background-color: #f4f4f4;
+  background-color: var(--bg-tertiary);
   font-weight: 600;
+  color: var(--text-primary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
+
+tr:hover {
+  background-color: var(--bg-tertiary);
+}
+
 input[type="number"] {
   margin-top: 4px;
   width: 100%;
+  padding: var(--spacing-xs);
+  border: 1px solid var(--border-base);
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-sm);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .fenchen-container {
+    padding: var(--spacing-sm);
+  }
+  
+  th, td {
+    padding: 8px 12px;
+    font-size: var(--font-size-xs);
+  }
+  
+  h1 {
+    font-size: var(--font-size-lg) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  th, td {
+    padding: 6px 8px;
+  }
+  
+  h1 {
+    font-size: var(--font-size-base) !important;
+  }
 }
 </style>

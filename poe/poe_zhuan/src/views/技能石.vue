@@ -1,9 +1,10 @@
 <template>
-   <el-row :gutter="20">
+  <div class="jineng-container">
+    <el-row :gutter="20">
       <el-col :span="12">
         <el-button type="text" class="custom-head" >五军练什么</el-button>
         <el-col :span="18">
-            <el-table :data="sortedGemData" border :style="{ marginTop: '15px' }" >
+            <el-table :data="sortedGemData" border :style="{ marginTop: '15px' }" v-loading="loading" element-loading-text="加载中...">
                 <!-- 第一列显示 name -->
                 <el-table-column prop="name" label="名称" min-width="60"/>
                 <!-- 第二列显示 level 为 1 的 calculated 值 -->
@@ -115,7 +116,7 @@
       <el-col :span="12">
         <el-button type="text" class="custom-head" >什么值得瓦</el-button>
         <el-col :span="18">
-            <el-table :data="sorted21GemData" border :style="{ marginTop: '15px' }" >
+            <el-table :data="sorted21GemData" border :style="{ marginTop: '15px' }" v-loading="loading" element-loading-text="加载中...">
                 <el-table-column prop="name" label="名称" min-width="60"/>
                 <el-table-column label="20级价格" min-width="40">
                     <template v-slot="scope">
@@ -222,11 +223,7 @@
               />
       </el-col>
     </el-row>
-
-
-
- 
-
+  </div>
 </template>
 
 
@@ -249,6 +246,8 @@ export default {
             valueE2:0,
             valueF2:0,
             valueG2:0,
+            loading: false,
+            error: null,
         };
     },
     computed: 
@@ -295,9 +294,12 @@ export default {
         },
         async fetchAndMergeItems() 
         {
+            this.loading = true;
+            this.error = null;
             try {
                 // 使用 fetch API 获取 JSON 数据
                 const response = await fetch('/gem.json');
+                if (!response.ok) throw new Error(`网络响应不正常: ${response.status}`);
                 const data = await response.json();
                 // 合并相同名称的项目
                 const mergedItems = {};
@@ -326,6 +328,9 @@ export default {
                 console.log("合并后的数据", this.gemdata);
             } catch (error) {
                 console.error("获取或处理 JSON 数据时出错:", error);
+                this.error = error.message || '获取数据失败，请检查网络连接';
+            } finally {
+                this.loading = false;
             }
         },
         navigatelv1ToSearch(variants)
@@ -394,14 +399,65 @@ export default {
     }
 };
 </script>
-<style >
-.custom-head {
-    border: none; /* 去掉边框 */
-    color: rgb(4, 4, 4); /* 字体颜色 */
-    background-color: transparent; /* 背景透明 */
-    font-size: 40px;
-    font-family: "SimSun", "宋体", sans-serif; /* 设置为宋体 */
-  }
+<style lang="less" scoped>
+.jineng-container {
+  padding: var(--spacing-md);
+  max-width: 100%;
+  overflow-x: auto;
+}
 
+.custom-head {
+  border: none;
+  color: var(--text-primary);
+  background-color: transparent;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+/* 表格样式 */
+.el-table {
+  width: 100%;
+  font-size: var(--font-size-sm);
+}
+
+/* 输入组样式 */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.input-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .jineng-container {
+    padding: var(--spacing-sm);
+  }
+  
+  .custom-head {
+    font-size: var(--font-size-lg);
+  }
+  
+  .el-col {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-head {
+    font-size: var(--font-size-base);
+  }
+}
 </style>
 

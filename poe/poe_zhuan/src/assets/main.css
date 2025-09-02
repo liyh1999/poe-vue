@@ -1,26 +1,123 @@
 @import './base.css';
+@import './variables.css';
+@import './animations.css';
+
+/* 全局样式重置 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
 
 #app {
-  /* max-width: 1280px; */
   margin: 0;
   padding: 0;
   font-weight: normal;
   height: 100vh;
   width: 100%;
+  background-color: var(--bg-primary);
 }
 
-
+/* 链接样式 */
 a,
 .green {
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
+  color: var(--primary-color);
+  transition: var(--transition-fast);
   padding: 3px;
+  border-radius: var(--border-radius-small);
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+a:hover {
+  background-color: var(--primary-light);
+  color: var(--bg-secondary);
+}
+
+/* 卡片样式 */
+.modern-card {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-light);
+  transition: var(--transition-base);
+  border: 1px solid var(--border-light);
+}
+
+.modern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-dark);
+}
+
+/* 按钮样式 */
+.modern-button {
+  border-radius: var(--border-radius-base);
+  transition: var(--transition-fast);
+  font-weight: 500;
+}
+
+.modern-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-base);
+}
+
+/* 表格样式 */
+.modern-table {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-large);
+  overflow: hidden;
+  box-shadow: var(--shadow-light);
+}
+
+.modern-table .el-table__header {
+  background: var(--bg-tertiary);
+}
+
+.modern-table .el-table__row:hover {
+  background: var(--bg-tertiary);
+}
+
+/* 输入框样式 */
+.modern-input {
+  border-radius: var(--border-radius-base);
+  transition: var(--transition-fast);
+}
+
+.modern-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+/* 统计卡片样式 */
+.statistic-card {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: white;
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-lg);
+  text-align: center;
+  box-shadow: var(--shadow-base);
+  transition: var(--transition-base);
+}
+
+.statistic-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-dark);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .modern-card {
+    margin: var(--spacing-sm);
+    border-radius: var(--border-radius-base);
+  }
+  
+  .statistic-card {
+    padding: var(--spacing-md);
   }
 }
 
@@ -31,9 +128,6 @@ a,
   }
 
   #app {
-    /* display: grid; */
-    /* grid-template-columns: 1fr 1fr; */
     padding: 0;
-}
-
+  }
 }

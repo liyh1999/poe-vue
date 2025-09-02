@@ -1,102 +1,142 @@
 <template>
+  <div class="jinghua-container">
     <el-row :gutter="20">
       <el-col :span="8">
-        <el-button type="text" class="custom-button" @click="filterlowItems">低价精华</el-button>
+        <el-button type="primary" class="modern-button filter-button button-click" @click="filterlowItems">低价精华</el-button>
       </el-col>
       <el-col :span="8">
-        <el-button type="text" class="custom-button" @click="filterhighItems">高价精华</el-button>
+        <el-button type="success" class="modern-button filter-button button-click" @click="filterhighItems">高价精华</el-button>
       </el-col>
       <el-col :span="8">
-        <el-button type="text" class="custom-button" @click="filterallItems">全部精华</el-button>
+        <el-button type="info" class="modern-button filter-button button-click" @click="filterallItems">全部精华</el-button>
       </el-col>
     </el-row>
   
-    <el-row :gutter="80" class="custom-row">
-      <el-col :span="8">
-        <el-table v-if="filteredItems.length > 0" :data="filteredItems" border>
-          <el-table-column prop="name" label="名称" min-width/>
-          <el-table-column prop="calculated" label="价格" sortable min-width="60"/>
-          <el-table-column label="购买链接" min-width="40">
-                <template #default="{ row }">
-                    <a :href="'https://poe.game.qq.com/trade/search/S26赛季/' + row.searchCode" target="_blank" rel="noopener noreferrer">
-                    <img :src="row.icon" alt="icon" class="icon" style="width: 30px; height: auto;" />
-                    </a>
-                </template>
-                </el-table-column>
-          <el-table-column label="数量">
+    <el-row :gutter="20" class="custom-row">
+      <el-col :span="10">
+        <el-table v-if="optimizedFilteredItems.length > 0" :data="optimizedFilteredItems" border v-loading="loading" element-loading-text="加载中..." class="modern-table" style="width: 100%;">
+          <el-table-column prop="name" label="名称" min-width="120" show-overflow-tooltip>
             <template #default="{ row }">
-              <el-input v-model="row.customQuantity" type="number" placeholder="请输入数量" />
+              <div class="item-name-cell">
+                <span class="item-name">{{ row.name }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="calculated" label="价格" sortable min-width="80" align="right">
+            <template #default="{ row }">
+              <span class="price-cell">{{ row.calculated.toFixed(2) }}C</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="购买链接" min-width="60" align="center">
+            <template #default="{ row }">
+              <a :href="'https://poe.game.qq.com/trade/search/S26赛季/' + row.searchCode" target="_blank" rel="noopener noreferrer" class="trade-link">
+                <img :src="row.icon" alt="icon" class="trade-icon" />
+              </a>
+            </template>
+          </el-table-column>
+          <el-table-column label="数量" min-width="100" align="center">
+            <template #default="{ row }">
+              <el-input v-model="row.customQuantity" type="number" placeholder="数量" size="small" class="quantity-input" />
             </template>
           </el-table-column>
         </el-table>
-        <div v-else>没有找到符合条件的项。</div>
+        <div v-else-if="!loading && !error" class="no-data">
+          <el-empty description="没有找到符合条件的项" />
+        </div>
+        <div v-else-if="error" class="error-message">
+          <el-alert
+            :title="error"
+            type="error"
+            show-icon
+            :closable="false"
+          >
+            <template #default>
+              <p>{{ error }}</p>
+              <el-button type="primary" @click="retryFetch">重试</el-button>
+            </template>
+          </el-alert>
+        </div>
 
-        <el-row :gutter="20">
-          <el-col :span="8"><div class="grid-content ep-bg-purple" />
-            <el-statistic title="当前转化预期收益" :value="`${shouyi.toFixed(2)}C`" />
-            <div :style="{ marginLeft: '15px' }">{{ (shouyi/shensheng).toFixed(2) }}D</div>
+        <el-row :gutter="12" class="statistics-row">
+          <el-col :span="6">
+            <div class="statistic-card">
+              <el-statistic title="转化预期收益" :value="`${shouyi.toFixed(2)}C`" class="count-up" />
+              <div class="statistic-subtitle">{{ (shouyi/shensheng).toFixed(2) }}D</div>
+            </div>
           </el-col>
-          <el-col :span="6"><div class="grid-content ep-bg-purple" />
-            <el-statistic title="当前精华总成本" :value="`${chengben.toFixed(2)}C`" />
-            <div :style="{ marginLeft: '15px' }">{{ (chengben/shensheng).toFixed(2) }}D</div>
+          <el-col :span="6">
+            <div class="statistic-card">
+              <el-statistic title="精华总成本" :value="`${chengben.toFixed(2)}C`" class="count-up" />
+              <div class="statistic-subtitle">{{ (chengben/shensheng).toFixed(2) }}D</div>
+            </div>
           </el-col>
-          <el-col :span="6"><div class="grid-content ep-bg-purple" />
-            <el-statistic title="当前命能总成本" :value="`${mingneng_chengben.toFixed(2)}C`" />
-            <div :style="{ marginLeft: '15px' }">{{ (mingneng_chengben/shensheng).toFixed(2) }}D</div>
+          <el-col :span="6">
+            <div class="statistic-card">
+              <el-statistic title="命能总成本" :value="`${mingneng_chengben.toFixed(2)}C`" class="count-up" />
+              <div class="statistic-subtitle">{{ (mingneng_chengben/shensheng).toFixed(2) }}D</div>
+            </div>
           </el-col>
-          <el-col :span="4"><div class="grid-content ep-bg-purple" />
-            <el-statistic title="利润空间" :value="`${(lirun * 100).toFixed(2)}%`" />
+          <el-col :span="6">
+            <div class="statistic-card">
+              <el-statistic title="利润空间" :value="`${(lirun * 100).toFixed(2)}%`" class="count-up" />
+            </div>
           </el-col>
         </el-row>
 
-          <el-row :gutter="20">
-            <el-col :span="8"><div class="grid-content ep-bg-purple" />
-              <div class="input-item">
-                <div class="label">每图精华数</div>
+          <el-row :gutter="16" class="input-row">
+            <el-col :span="8">
+              <div class="input-group">
+                <label class="input-label">每图精华数</label>
                 <el-input
                   v-model.number="valueA"
                   type="number"
                   placeholder="请输入数字"
-                 
+                  class="modern-input"
                 />
               </div>
             </el-col>
-            <el-col :span="8"><div class="grid-content ep-bg-purple" />
-              <div class="input-item">
-                <div class="label">每图成本(C)</div>
+            <el-col :span="8">
+              <div class="input-group">
+                <label class="input-label">每图成本(C)</label>
                 <el-input
                   v-model.number="valueB"
                   type="number"
                   placeholder="请输入数字"
-                 
+                  class="modern-input"
                 />
               </div>
             </el-col>
-            <el-col :span="8"><div class="grid-content ep-bg-purple" />
-              <div class="input-item">
-                <div class="label">每图时间(S)</div>
+            <el-col :span="8">
+              <div class="input-group">
+                <label class="input-label">每图时间(S)</label>
                 <el-input
                   v-model.number="valueC"
                   type="number"
                   placeholder="请输入数字"
-               
+                  class="modern-input"
                 />
               </div>
             </el-col>
           </el-row>
-          <el-row :gutter="20">
-          <el-col :span="8"><div class="grid-content ep-bg-purple" />
-            <el-statistic title="每图收益" :value="`${(meitu_shouyi).toFixed(2)}C`" />
-            <div :style="{ marginLeft: '15px' }">{{ (meitu_shouyi/shensheng).toFixed(2) }}D</div>
-          </el-col>
-          <el-col :span="8"><div class="grid-content ep-bg-purple" />
-            <el-statistic title="每小时收益" :value="`${meixiaoshi_shouyi.toFixed(2)}C`" />
-            <div :style="{ marginLeft: '15px' }">{{ (meixiaoshi_shouyi/shensheng).toFixed(2) }}D</div>
-          </el-col>
-          <el-col :span="8"><div class="grid-content ep-bg-purple" />
-            <el-statistic title="转化后小时收益" :value="`${(meixiaoshi_shouyi+shouyi).toFixed(2)}C`" />
-            <div :style="{ marginLeft: '15px' }">{{ ((meixiaoshi_shouyi+shouyi)/shensheng).toFixed(2) }}D</div>
-          </el-col>
+          <el-row :gutter="16" class="revenue-row">
+            <el-col :span="8">
+              <div class="revenue-card">
+                <el-statistic title="每图收益" :value="`${meituShouyi.toFixed(2)}C`" class="count-up" />
+                <div class="revenue-subtitle">{{ (meituShouyi/shensheng).toFixed(2) }}D</div>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="revenue-card">
+                <el-statistic title="每小时收益" :value="`${meixiaoshiShouyi.toFixed(2)}C`" class="count-up" />
+                <div class="revenue-subtitle">{{ (meixiaoshiShouyi/shensheng).toFixed(2) }}D</div>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="revenue-card">
+                <el-statistic title="转化后小时收益" :value="`${(meixiaoshiShouyi+shouyi).toFixed(2)}C`" class="count-up" />
+                <div class="revenue-subtitle">{{ ((meixiaoshiShouyi+shouyi)/shensheng).toFixed(2) }}D</div>
+              </div>
+            </el-col>
 
           <el-button plain @click="dialogTableVisible = true">
             理论计算方法
@@ -117,26 +157,31 @@
         </el-row>
         </el-col>
      <el-col :span="14">
-        <div class="header">转精华收益计算</div> <!-- 添加表头 -->
-        <el-card class="custom-card" v-for="(item, index) in saying" :key="index">
-          <div class="card-content">
-            <div class="title2">{{ item.title }}</div>
-            <div class="description" v-if="index === 0" style="display: flex; justify-content: flex-end; align-items: center;">
-              <el-input 
-                v-model="shensheng" 
-                style="width: 120px; font-size: 24px;margin-left:700px" 
-                size="small"
-              />
-            </div>
-            <div class="description" v-if="index === 1" style="display: flex; justify-content: flex-end; align-items: center;">
-              <el-input 
-                v-model="mingneng" 
-                style="width: 120px; font-size: 24px;margin-left:620px" 
-                size="small"
-              />
-            </div>
-            <div class="right-text">{{ index === 0|| index === 1||index === 2 || index === 3||index === 4||index === 5||index === 6 ||index === 7? '' : item.rightText }}</div> 
-            <div class="description" v-if="index === 2">
+        <div class="section-header">转精华收益计算</div>
+        <div class="cards-container">
+          <el-card class="modern-card custom-card card-hover" v-for="(item, index) in saying" :key="index" :style="{ animationDelay: `${index * 0.1}s` }">
+            <div class="card-content">
+              <div class="card-title">{{ item.title }}</div>
+              <div class="card-actions">
+                <div v-if="index === 0" class="input-action">
+                  <el-input 
+                    v-model="shensheng" 
+                    placeholder="DC比"
+                    size="small"
+                    class="action-input"
+                  />
+                </div>
+                <div v-if="index === 1" class="input-action">
+                  <el-input 
+                    v-model="mingneng" 
+                    placeholder="转化成本"
+                    size="small"
+                    class="action-input"
+                  />
+                </div>
+              </div>
+              <div class="right-text">{{ index === 0|| index === 1||index === 2 || index === 3||index === 4||index === 5||index === 6 ||index === 7? '' : item.rightText }}</div> 
+              <div class="description" v-if="index === 2">
               <el-button-group>
                 <el-button type="primary" @click="resetQuantities">一键清除</el-button> 
                 <el-tooltip content="这里默认的数值是根据每图精华数量和刷图时间算出来的" placement="top">
@@ -199,9 +244,11 @@
             {{ item.description }} 
           </div>
         </el-card>
+        </div>
       </el-col>
     </el-row>
-  </template>
+  </div>
+</template>
   <script>
  import { ElMessage, ElLoading } from "element-plus";
   export default {
@@ -250,6 +297,9 @@
         activeItem:0,
         activeItem2:0,
         count:8,
+        loading: false,
+        error: null,
+        retryCount: 0,
       form: {
         username: '',
         possid: ''
@@ -258,12 +308,51 @@
       index: 3, // 确保 index===3 渲染此段内容
       };
     },
+    computed: {
+        // 使用计算属性优化性能
+        optimizedFilteredItems() {
+            if (!this.items.length) return [];
+            const maxCalculated = parseFloat(this.input) || 0;
+            return this.items.filter(item => 
+                item.name.includes('破空精华') && item.calculated < maxCalculated
+            );
+        },
+        optimizedFilteredHighItems() {
+            if (!this.items.length) return [];
+            const maxCalculated = parseFloat(this.input) || 0;
+            return this.items.filter(item => 
+                item.name.includes('破空精华') && item.calculated > maxCalculated
+            );
+        },
+        optimizedFilteredAllItems() {
+            if (!this.items.length) return [];
+            return this.items.filter(item => 
+                item.name.includes('破空精华') && item.calculated
+            );
+        },
+        // 缓存计算结果
+        averagePrice() {
+            if (!this.optimizedFilteredAllItems.length) return 0;
+            return this.optimizedFilteredAllItems.reduce((sum, item) => sum + item.calculated, 0) / 
+                   this.optimizedFilteredAllItems.length;
+        },
+        meituShouyi() {
+            return this.averagePrice * this.valueA - this.valueB;
+        },
+        meixiaoshiShouyi() {
+            return this.valueC > 0 ? this.meituShouyi / this.valueC * 3600 : 0;
+        },
+        newQuantityCalculated() {
+            return this.valueC > 0 ? this.valueA / this.valueC * 3600 / 20 : 0;
+        }
+    },
     watch: {
-    // 监听值的变化并更新计算
-    valueA: 'fetchData',
-    valueB: 'fetchData',
-    valueC: 'fetchData',
-  },
+        // 监听值的变化并更新计算
+        valueA: 'updateCalculations',
+        valueB: 'updateCalculations',
+        valueC: 'updateCalculations',
+        input: 'updateFilteredItems',
+    },
     methods: {
         handleClose() 
         {
@@ -307,30 +396,16 @@
         },
         async fetchData() 
         {
+            this.loading = true;
+            this.error = null;
             try {
                 const response = await fetch('/jinghua.json'); // 替换为你的 JSON 路径
-                if (!response.ok) throw new Error('网络响应不正常');
+                if (!response.ok) throw new Error(`网络响应不正常: ${response.status}`);
                 const data = await response.json();
                 this.items = data; // 存储 JSON 数据
-                const maxCalculated = parseFloat(this.input); // 获取输入的数字
-                this.filteredItems = this.items.filter(item => 
-                item.name.includes('破空精华') && item.calculated < maxCalculated,
-                );
-                this.filteredhighItems = this.items.filter(item => 
-                item.name.includes('破空精华') && item.calculated > maxCalculated,
-                );
-                this.filteredlowItems = this.items.filter(item => 
-                    item.name.includes('破空精华') && item.calculated < maxCalculated,
-                );
-                this.filteredallItems = this.items.filter(item => 
-                item.name.includes('破空精华') && item.calculated 
-                 );
-                 const average =
-                this.filteredallItems.reduce((sum, item) => sum + item.calculated , 0) /
-                this.filteredallItems.length;
-                this.meitu_shouyi=average*this.valueA-this.valueB
-                this.meixiaoshi_shouyi=this.meitu_shouyi/this.valueC*3600
-                this.newQuantity=this.valueA/this.valueC*3600/20
+                // 使用计算属性自动更新筛选结果
+                this.updateFilteredItems();
+                this.updateCalculations();
                 this.activeItem = this.items.find(item => item.name === '原始蓝晶命能');
                 const activeCalculated = this.activeItem ? this.activeItem.calculated : null;
                 if (activeCalculated !== null) {
@@ -345,60 +420,72 @@
                 }
             } catch (error) {
                 console.error('获取数据时出错:', error);
+                this.error = error.message || '获取数据失败，请检查网络连接';
+                this.retryCount++;
+            } finally {
+                this.loading = false;
             }
+        },
+        retryFetch() {
+            this.retryCount = 0;
+            this.fetchData();
+        },
+        updateCalculations() {
+            // 使用计算属性自动更新，这里可以添加额外的计算逻辑
+            this.meitu_shouyi = this.meituShouyi;
+            this.meixiaoshi_shouyi = this.meixiaoshiShouyi;
+            this.newQuantity = this.newQuantityCalculated;
+        },
+        updateFilteredItems() {
+            // 使用计算属性自动更新
+            this.filteredItems = this.optimizedFilteredItems;
+            this.filteredhighItems = this.optimizedFilteredHighItems;
+            this.filteredallItems = this.optimizedFilteredAllItems;
         },
         filterlowItems() 
         {
-            const maxCalculated = parseFloat(this.input); // 获取输入的数字
-            if (isNaN(maxCalculated)) return; // 如果输入不是数字，直接返回
-            this.filteredItems = this.items.filter(item => 
-                item.name.includes('破空精华') && item.calculated < maxCalculated,
-            );
+            this.filteredItems = this.optimizedFilteredItems;
         },
         filterhighItems() 
         {
-            const maxCalculated = parseFloat(this.input); // 获取输入的数字
-            if (isNaN(maxCalculated)) return; // 如果输入不是数字，直接返回
-            this.filteredItems = this.items.filter(item => 
-                item.name.includes('破空精华') && item.calculated > maxCalculated,
-            );
+            this.filteredItems = this.optimizedFilteredHighItems;
         },
         filterallItems() 
         {
-            const maxCalculated = parseFloat(this.input); // 获取输入的数字
-            if (isNaN(maxCalculated)) return; // 如果输入不是数字，直接返回
-            this.filteredItems = this.items.filter(item => 
-                item.name.includes('破空精华') && item.calculated 
-            );
+            this.filteredItems = this.optimizedFilteredAllItems;
         },
         calculateConversionProfit() {
-        let totalProfit = 0;
-        let total_chengben=0
-        let total_mingneng_chengben=0
-        // 遍历 filteredItems 中的每个项目
-        for (const item of this.filteredItems) 
-        {
-            let total=0;
-            const itemPrice = item.calculated;  
-            total_chengben+=itemPrice*item.customQuantity
-            total_mingneng_chengben+=item.customQuantity*1/(this.filteredItems.length/20)*this.mingneng
-            // 遍历 filteredHighItems 中的每个高价项目
-            for (const highItem of this.filteredhighItems) 
-            {
-                const highPrice = highItem.calculated;  
-                // 计算价格差
-                const priceDifference = highPrice - itemPrice;
-                // 计算收益
-                const profit = (priceDifference - this.mingneng) / 20
-                // 累加到总收益
-                total += profit;
+            let totalProfit = 0;
+            let total_chengben = 0;
+            let total_mingneng_chengben = 0;
+            
+            // 使用Map优化查找性能
+            const highItemMap = new Map();
+            this.optimizedFilteredHighItems.forEach(item => {
+                highItemMap.set(item.name, item);
+            });
+            
+            // 遍历 filteredItems 中的每个项目
+            for (const item of this.optimizedFilteredItems) {
+                const itemPrice = item.calculated;  
+                total_chengben += itemPrice * item.customQuantity;
+                total_mingneng_chengben += item.customQuantity * 1 / (this.optimizedFilteredItems.length / 20) * this.mingneng;
+                
+                let total = 0;
+                // 遍历高价项目计算收益
+                for (const highItem of this.optimizedFilteredHighItems) {
+                    const highPrice = highItem.calculated;  
+                    const priceDifference = highPrice - itemPrice;
+                    const profit = (priceDifference - this.mingneng) / 20;
+                    total += profit;
+                }
+                totalProfit += (total - this.optimizedFilteredItems.length / 20 * this.mingneng) * item.customQuantity;
             }
-            totalProfit+=(total-this.filteredItems.length/20*this.mingneng)*item.customQuantity
-        }
-        this.chengben=total_chengben
-        this.shouyi=totalProfit
-        this.mingneng_chengben=total_mingneng_chengben
-        this.lirun=totalProfit/(total_chengben+total_mingneng_chengben)
+            
+            this.chengben = total_chengben;
+            this.shouyi = totalProfit;
+            this.mingneng_chengben = total_mingneng_chengben;
+            this.lirun = totalProfit / (total_chengben + total_mingneng_chengben);
         },
         handleDialogClose() {
         this.dialogVisible = false
@@ -418,7 +505,7 @@
           
         },
         processUserInfo(username, possid) {
-          fetch('https://47.117.185.5:5002/process_user_info', {
+          fetch('/api/process_user_info', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -497,18 +584,32 @@
     font-weight: bold; /* 加粗 */
     font-family: "SimSun", "SimHei", sans-serif; /* 设置为宋体 */
   }
-  .custom-button {
-    border: none; /* 去掉边框 */
-    color: rgb(4, 4, 4); /* 字体颜色 */
-    background-color: transparent; /* 背景透明 */
-    font-size: 40px;
-    font-family: "SimSun", "宋体", sans-serif; /* 设置为宋体 */
+  .filter-button {
+    width: 100%;
+    height: 50px;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    border-radius: var(--border-radius-large);
+    transition: var(--transition-fast);
+  }
+  
+  .filter-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-base);
   }
   .custom-row {
     margin-top: 20px; /* 根据需要调整间距 */
   }
   .custom-card {
-    margin-bottom: 0; /* 设置卡片间距 */
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-light);
+    transition: var(--transition-base);
+  }
+  
+  .custom-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-dark);
   }
   .card-content {
     display: flex; /* 使用 Flexbox 布局 */
@@ -539,6 +640,233 @@ progress {
   margin-top: 20px;
   padding: 10px;
   border: 1px solid #eee;
+}
+
+/* 布局优化样式 */
+.jinghua-container {
+  padding: var(--spacing-md);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* 表格样式优化 */
+.modern-table {
+  width: 100%;
+  font-size: var(--font-size-sm);
+}
+
+.item-name-cell {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.price-cell {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.trade-link {
+  display: inline-block;
+  transition: var(--transition-fast);
+}
+
+.trade-link:hover {
+  transform: scale(1.1);
+}
+
+.trade-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--border-radius-small);
+}
+
+.quantity-input {
+  width: 80px;
+}
+
+/* 统计卡片样式 */
+.statistics-row {
+  margin: var(--spacing-lg) 0;
+}
+
+.statistic-card {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: white;
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-md);
+  text-align: center;
+  box-shadow: var(--shadow-base);
+  transition: var(--transition-base);
+  margin-bottom: var(--spacing-sm);
+}
+
+.statistic-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-dark);
+}
+
+.statistic-subtitle {
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+  margin-top: var(--spacing-xs);
+}
+
+/* 输入组样式 */
+.input-row {
+  margin: var(--spacing-md) 0;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.input-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 收益卡片样式 */
+.revenue-row {
+  margin: var(--spacing-md) 0;
+}
+
+.revenue-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-md);
+  text-align: center;
+  box-shadow: var(--shadow-light);
+  transition: var(--transition-base);
+}
+
+.revenue-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-base);
+}
+
+.revenue-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+/* 右侧卡片区域 */
+.section-header {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.card-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 200px;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.input-action {
+  display: flex;
+  align-items: center;
+}
+
+.action-input {
+  width: 120px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .jinghua-container {
+    padding: var(--spacing-sm);
+  }
+  
+  .el-col {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .jinghua-container {
+    padding: var(--spacing-sm);
+  }
+  
+  .filter-button {
+    height: 40px;
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .statistic-card {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .card-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .card-title {
+    min-width: auto;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .section-header {
+    font-size: var(--font-size-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-button {
+    height: 35px;
+    font-size: var(--font-size-sm);
+  }
+  
+  .statistic-card {
+    padding: var(--spacing-xs);
+  }
+  
+  .section-header {
+    font-size: var(--font-size-base);
+  }
+  
+  .action-input {
+    width: 100px;
+  }
 }
   </style>
   
